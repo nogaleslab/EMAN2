@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-#test added by mike
+
 import os
 from global_def import *
 from optparse import OptionParser
