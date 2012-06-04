@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
+#Phase flip stack c/o Richard J. Hall
+
 from EMAN2 import *
-#Added line as test
+
 def main():
 
 	process_stack("stack_man_dc4_CTF_raw.hdf", "stack_man_dc4_CTF_flip.hdf", invert=True,edgenorm=True)
