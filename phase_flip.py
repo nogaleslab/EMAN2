@@ -2,11 +2,19 @@
 
 #Phase flip stack c/o Richard J. Hall
 
+#To use:
+#./phase_flip.py [stack].hdf
+
+import sys
 from EMAN2 import *
+
+stack = sys.argv[1]
+
+new = '%s_flip.hdf' %(stack[:-4])
 
 def main():
 
-	process_stack("stack_man_dc4_CTF_raw.hdf", "stack_man_dc4_CTF_flip.hdf", invert=True,edgenorm=True)
+	process_stack(stack, new, invert=True,edgenorm=True)
 
 
 def process_stack(stackfile,outfile, phaseflip=True,phasehp=None,wiener=None,edgenorm=True,oversamp=1,default_ctf=None,invert=False,virtualout=None,storeparm=False,source_image=None):
