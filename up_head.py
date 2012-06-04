@@ -47,7 +47,7 @@ def main():
 					angle = int(float(nfo[8]))
 
 				"""
-				# For FREALIGN
+				# For future use if taking from FREALIGN
 				if p[0]=="C":
 					continue
 				(pnum,psi,theta,phi,shx,shy,mag,hnum,ctf1,ctf2,angle,pres,delta)=p.strip().split()
