@@ -1,1 +1,3 @@
-This repo houses EMAN2/Sparx scripts used for tasks that range from 3D projection matching refinements to simple stack maniuplations.
+This repo houses EMAN2/Sparx scripts used for manipulating parameter file and .hdf header information.
+
+
