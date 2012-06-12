@@ -31,7 +31,14 @@ def main():
 			# get ctf values from parfile
 			from utilities import generate_ctf
 			pfile = open(ctfpar).readlines()
-			parts=[0]*len(pfile)
+			ctfinfo=[0]*len(pfile)
+
+			# check if there are helical parameters:
+			if len(pfile[0].strip().split())==9:
+				helical = True
+				hinfo=[0]*len(pfile)
+
+			# store info
 			for p in pfile:
 				nfo = p.strip().split()
 				pnum=int(float(nfo[0]))-1
@@ -42,10 +49,13 @@ def main():
 				cs = float(nfo[5])
 				ampc = float(nfo[6])*100
 				
-				if len(nfo) == 9:
+				if helical is True:
 					hnum = int(float(nfo[7]))
-					angle = int(float(nfo[8]))
-
+					angle = float(nfo[8])
+					angle = -angle+90
+					if angle > 360: angle -= 360
+					if angle < 0: angle += 360
+					hinfo[pnum]=angle
 				"""
 				# For future use if taking from FREALIGN
 				if p[0]=="C":
@@ -57,7 +67,7 @@ def main():
 				ampc=5
 				"""
 				df=(float(df1)+float(df2))/2
-				parts[pnum]=generate_ctf([df,cs,kv,apix,0.0,ampc])
+				ctfinfo[pnum]=generate_ctf([df,cs,kv,apix,0.0,ampc])
 
 		imn = EMUtil.get_image_count(fname) 
 		print "Generating 'start.hdf' with %i particles"%imn
@@ -65,7 +75,9 @@ def main():
 			a.read_image(fname,i)
 			a.set_attr_dict({'active':1})
 			if ctfpar is not None:
-				a.set_attr("ctf",parts[i])
+				a.set_attr("ctf",ctfinfo[i])
+			if helical is True:
+				a.set_attr("h_angle",hinfo[i])
 			t2 = Transform({"type":"spider","phi":0,"theta":0,"psi":0})
 		        a.set_attr("xform.projection", t2)
 			a.set_attr("apix_x",apix )
