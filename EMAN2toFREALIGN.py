@@ -11,7 +11,7 @@ import shutil
 
 def setupParserOptions():
 	parser = optparse.OptionParser()
-	parser.set_usage("%prog -f <stack> -p <parameter> -c <ctf> --mag=<float> -s")
+	parser.set_usage("%prog -f <stack> -p <parameter> -c <ctf> -s")
 	parser.add_option("-f",dest="stack",type="string",metavar="FILE",
 		help="raw, IMAGIC particle stack (black particles) - if not specified, only parameter files will be created, no new stack")
 	parser.add_option("-p",dest="param",type="string",metavar="FILE",
@@ -24,10 +24,10 @@ def setupParserOptions():
 		help="Flag if your original stack before converting to HDF format was a SPIDER stack OR if you used XMIPP normalization during APPION processing")
 	parser.add_option("--norm", action="store_true",dest="norm",default=False,
 		help="Normalize particles")
-	parser.add_option("-d", action="store_true",dest="debug",default=False,
-		help="debug")
 	parser.add_option("-m",dest="onlymodel",type="int",metavar="#",
 		help="only convert this model (optional, starts with 0)")
+	parser.add_option("-d", action="store_true",dest="debug",default=False,
+		help="debug")
 	options,args = parser.parse_args()
 
 	if len(args) > 0:
