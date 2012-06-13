@@ -264,13 +264,12 @@ def createFiles(params):
 		frestack = imgToFrealign(imstack)
 		if not os.path.isfile(frestack):
 			print "Error: SPIDER stack '%s' was not generated"%frestack
-#		params['garbage'].append(imstack+".img")
-#		params['garbage'].append(imstack+".hed")
+		params['garbage'].append(imstack+".img")
+		params['garbage'].append(imstack+".hed")
 		params['garbage'].append(text)
 
 	params['garbage'].append('_em2em.dff')
 	params['garbage'].append('_imagic.dff')
-
 
 #=========================
 #=========================
