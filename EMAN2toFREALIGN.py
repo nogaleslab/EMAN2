@@ -20,8 +20,6 @@ def setupParserOptions():
 		help="per-particle CTF information file from APPION (optional)")
 	parser.add_option("--mag",dest="mag",type="float", metavar="FLOAT", default=10000,
 		help="actual magnification of images (default=10000)")
-	parser.add_option("--flip", action="store_true",dest="flip",default=False,
-		help="Flag if your original stack before converting to HDF format was a SPIDER stack OR if you used XMIPP normalization during APPION processing")
 	parser.add_option("--norm", action="store_true",dest="norm",default=False,
 		help="Normalize particles")
 	parser.add_option("-m",dest="onlymodel",type="int",metavar="#",
@@ -56,24 +54,11 @@ def checkConflicts(params):
 		print "\nError: EMAN2 parameter file '%s' does not exist\n" % params['param']
 		sys.exit()
 	if not params['ctf']:
-		print "\nWarning: no CTF parameter file specified"
+		print "\nError: no CTF parameter file specified"
+		sys.exit()
 	elif not os.path.isfile(params['ctf']):
 		print "\nError: Appion CTF parameter file '%s' does not exist\n" % params['ctf']
 		sys.exit()
-
-#=========================
-def getEM2EMPath():
-	### get the imagicroot directory
-	impath = subprocess.Popen("env | grep IMAGIC_ROOT", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
-	if not impath:
-		print "IMAGIC was not found, make sure it's in your path"
-		sys.exit()
-	imagicpath = impath.replace("IMAGIC_ROOT=","")
-	em2em = os.path.join(imagicpath,'stand/em2em.e')
-	if not os.path.isfile(em2em):
-		print "em2em is not found in the IMAGIC directory"
-		sys.exit()
-	return em2em
 
 #=========================
 def getEMANPath():	
@@ -114,54 +99,6 @@ def Eman2Freali(az,alt,phi):
     theta= d["alt"]
     phi = d["az"]-90
     return psi,theta,phi
-
-#=========================
-def checkImagicHed(hedfile,nimg):
-	of = open(hedfile,"rb")
-	newhead = open('newimgheader.hed','wb')
-	for i in xrange(nimg):
-		data = of.read(1024)
-		newhead.write(data[0*4:60*4])
-		newhead.write(struct.pack("i",0))
-		newhead.write(data[61*4:])
-	newhead.close()
-	of.close()
-	shutil.move('newimgheader.hed',hedfile)
-	
-#=========================
-def imgToFrealign(imstack):
-	"""
-	use EM2EM to convert an imagic stack into a single
-	3D spider stack for Frealign
-	"""
-	# remove extension if present
-	stackname=os.path.splitext(imstack)[0]
-
-	# output stack name
-	frestack = stackname+"_fre.spi"
-	feed="IM\n"
-	feed+="SPI\n"
-	feed+="SINGLE_FILE\n"
-	feed+="3D\n"
-	feed+="%s\n"%stackname
-	feed+="%s\n"%frestack
-	feed+="LINUX\n"
-	feed+="YES\n"
-
-	em2em=getEM2EMPath()
-	proc=subprocess.Popen(em2em, shell=True, stdin=subprocess.PIPE)
-	fin = proc.stdin
-	fin.write(feed)
-	fin.flush()
-	proc.wait()
-
-	return frestack
-
-#=========================
-def cleanup(files):
-	for f in files:
-		if os.path.isfile(f):
-			os.remove(f)
 
 #=========================
 def createFiles(params):
@@ -229,47 +166,45 @@ def createFiles(params):
 	if stack is None:
 		return
 
+	# get box size
+	im=EMData.read_images(stack,[0])
+	nx = im[0].get_xsize()
+	del im
+
+#	from EMAN2PAR import EMTaskCustomer
+#	if params['nproc'] > 1:
+#		etc = EMTaskCustomer("thread:%i"%params['nproc'])
+#	else:
+#		etc = EMTaskCustomer("thread:1")
+
 	for m in range(numMods):
 		if params['onlymodel'] is not None:
 			if m!=params['onlymodel']: continue
 
-		## particles must be reversed for frealign
 		text='%s_%02i.txt' %(parm,m)
-		revparts = open(text).readlines()
-		revparts.reverse()
-		nimg = len(revparts)
+		parts = open(text).readlines()
+		nimg = len(parts)
 
 		imstack = "%s_model%02i"%(os.path.splitext(stack)[0],m)
-		print "\nGenerating %i particle stack for Model %i..."%(nimg,m)
 
-		t = Transform({"type":"spider","psi":180})		
+		print "\nAllocating space for Model %i stack..."%m
+		img = EMData(nx,nx,nimg)
+		img.write_image(imstack+'.mrc')
+
+		print "Generating %i particle stack for Model %i..."%(nimg,m)
 		for i in xrange(nimg):
-			p = int(float(revparts[i]))
+			p = int(float(parts[i]))
 			d = EMData()
 			d.read_image(stack, p)
 			if params['norm'] is True:
 				d.process_inplace("normalize")
-			if params['flip'] is True:
-				d.process_inplace("xform.flip",{"axis":"y"})
-			d.write_image(imstack+".img",-1,IMAGE_IMAGIC)
+			region = Region(0, 0, i, nx, nx, 1)
+			d.write_image(imstack+".mrc",0,EMUtil.get_image_ext_type("mrc"), False, region, EMUtil.EMDataType.EM_FLOAT, True)
 			progress = int(float(i)/nimg*100)
 			if progress%2==0:
 				print "%3i%% complete\t\r"%progress,
 		print "100% complete\t"
-
-		## em2em doesn't handle the new 4D imagic headers
-		checkImagicHed(imstack+".hed",nimg)
-
-		print "\nConverting IMAGIC stack into 3D SPIDER stack..."
-		frestack = imgToFrealign(imstack)
-		if not os.path.isfile(frestack):
-			print "Error: SPIDER stack '%s' was not generated"%frestack
-		params['garbage'].append(imstack+".img")
-		params['garbage'].append(imstack+".hed")
-		params['garbage'].append(text)
-
-	params['garbage'].append('_em2em.dff')
-	params['garbage'].append('_imagic.dff')
+		os.remove(text)
 
 #=========================
 #=========================
@@ -277,7 +212,6 @@ if __name__ == "__main__":
 	params=setupParserOptions()
 
 	getEMANPath()
-	getEM2EMPath()
 	from EMAN2 import *
 	from sparx  import *
 
@@ -285,10 +219,5 @@ if __name__ == "__main__":
 	params['num']=getNumModels(params)
 	print "EMAN2 parameter file contains %s models"%params['num']
 
-	# keep a list of files to clean up afterwards
-	params['garbage']=[]
-
 	createFiles(params)
-
-	cleanup(params['garbage'])
 
