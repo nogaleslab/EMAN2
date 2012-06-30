@@ -23,6 +23,7 @@ def main():
 		fname = args[0]
 		apix = float(args[1])
 		ctfpar = None
+		helical = False
 		if len(args) == 3:
 			ctfpar = args[2]
 			if not os.path.isfile(ctfpar):
