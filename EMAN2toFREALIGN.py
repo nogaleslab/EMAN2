@@ -80,7 +80,7 @@ def getNumModels(params):
 	for line in f:
 		l = line.split()
 		model=float(l[-1])
-		if model > 99:
+		if 889 > model > 99:
 			continue
 		if model not in mods:
 			mods.append(model)
@@ -135,10 +135,12 @@ def createFiles(params):
 
 		psi,theta,phi = Eman2Freali(parmPSI,parmTHETA,parmPHI)	
 
-		if model < 99:
+		if model < 99 or model > 889:
 			if debug is True:
 				print 'Particle %s is included' %(pcount-1)
 
+			if model > 889:
+				model = 0
 			mtxt[model].write("%s\n" %(pcount-1))
 			ctf = linecache.getline(params['ctf'],pcount)
 			if debug is True:

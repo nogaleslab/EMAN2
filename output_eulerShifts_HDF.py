@@ -39,7 +39,7 @@ def getEMANPath():
 	print "EMAN2 was not found, make sure it is in your path"        
 	sys.exit()
 
-def main(params):
+def main2(params):
 
 	s = params['stack']
 	dummy = EMData()
@@ -62,6 +62,6 @@ if __name__ == "__main__":
      from EMAN2 import *
      from sparx  import *
      params=setupParserOptions()
-     main(params)
+     main2(params)
    
 
