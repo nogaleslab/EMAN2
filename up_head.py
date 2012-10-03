@@ -1,11 +1,20 @@
 #!/usr/bin/env python
 
 import os
-from global_def import *
 from optparse import OptionParser
 import sys
+import subprocess
 
-from EMAN2  import *
+def getEMAN2():
+        ### get the imagicroot directory        
+        emanpath = subprocess.Popen("env | grep EMAN2DIR", shell=True, stdout=subprocess.PIPE).stdout.read().strip()
+
+        if emanpath:
+                emanpath = emanpath.replace("EMAN2DIR=","")
+        if os.path.exists(emanpath):
+                return emanpath
+        print "EMAN2 was not found, make sure eman2/2.05 is in your path"        
+        sys.exit()	
 
 def main():
 	arglist = []
@@ -87,5 +96,8 @@ def main():
 		print "100% complete\t"
 
 if __name__ == "__main__":
-        main()
+        getEMAN2()
+	from global_def import *
+	from EMAN2  import *
+	main()
 
