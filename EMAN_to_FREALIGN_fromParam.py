@@ -67,7 +67,7 @@ def Eman2Freali(az,alt,phi):
 
     return psi,theta,phi
 
-def main(params):
+def main1(params):
 	parm=params['param']
 	num=float(params['num'])
 	spi = params['spider']
@@ -158,10 +158,65 @@ def main(params):
 		spiOut1.close()
 		spiOut2.close()
 
+
+	if num == 3:
+                f=open(parm,'r')
+                out = open("%s_frealign"%(parm),'w')
+                count1=1
+                count2=1
+		count3=1
+                count=1
+                if spi is True:
+
+                                spiOut1 = open("%s_01.spi" %(parm),'w')
+                                spiOut2 = open("%s_02.spi" %(parm),'w')
+				spiOut3 = open("%s_03.spi" %(parm),'w')
+                print "\n"
+                print "Calculating euler angle conversion..."
+                print "\n"
+
+                for line in f:
+
+                        l = line.split()
+
+                        parmPSI = float(l[0])
+                        parmTHETA = float(l[1])
+                        parmPHI = float(l[2])
+                        sx =(float(l[3]))
+                        sy =(float(l[4]))
+                        model = float(l[5])
+
+                        psi,theta,phi = Eman2Freali(parmPSI,parmTHETA,parmPHI)
+
+                        out.write("%s   %s      %s      %s      %s      %s\n"%(psi,theta,phi,sx,sy,model))
+
+                        if spi is True:
+                                if model == 0:
+
+                                        spiOut1.write("%7d      %7d     %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f\n" %(count1,6,psi,theta,phi,sx,sy,count))
+                                        count1 = count1 + 1
+
+                                if model == 1:
+
+                                        spiOut2.write("%7d      %7d     %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f\n" %(count2,6,psi,theta,phi,sx,sy,count))
+                                        count2 = count2 + 1
+
+				if model == 2:
+
+                                        spiOut3.write("%7d      %7d     %8.3f   %8.3f   %8.3f   %8.3f   %8.3f   %8.3f\n" %(count2,6,psi,theta,phi,sx,sy,count))
+                                        count3 = count3 + 1
+                        count=count+1
+
+		f.close()
+                out.close()
+                spiOut1.close()
+                spiOut2.close()
+		spiOut3.close()
+
 #Need this at the end for the parse commands
 if __name__ == "__main__":
      getEMANPath()
      from EMAN2 import *
      from sparx  import *
      params=setupParserOptions()
-     main(params)
+     main1(params)
